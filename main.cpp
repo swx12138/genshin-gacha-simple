@@ -3,6 +3,7 @@
 #include <random>
 #include <unordered_set>
 #include <sstream>
+#include <Windows.h>
 
 using namespace std;
 
@@ -31,8 +32,46 @@ namespace pool {
 	};
 }
 
+class console
+{
+public:
+	static BOOL SetTextWhite()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	}
+	static BOOL SetTextRed()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_INTENSITY | FOREGROUND_RED);
+	}
+	static BOOL SetTextGreen()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+	}
+	static BOOL SetTextBlue()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	}
+	static BOOL SetTextPink()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
+	}
+	static BOOL SetTextGreenBlue()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	}
+	static BOOL SetTextGolden()
+	{
+		return SetConsoleTextAttribute(hStdOut, FOREGROUND_RED | FOREGROUND_GREEN);
+	}
+private:
+	static HANDLE hStdOut;
+};
+
+HANDLE console::hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
 class Gacha
 {
+	using xx = pair<string, short>;
 public:
 	Gacha()
 	{
@@ -45,7 +84,7 @@ public:
 	short roll_once_x()
 	{
 		nCount++;
-		cout << roll_main().first << endl;
+		write_name(roll_main());
 		output_debug_msg();
 		return nT5;
 	}
@@ -55,7 +94,7 @@ public:
 		nCount += 10;
 
 		for(int i = 0; i < 10; i++)
-			cout << roll_main().first << "\t";
+			write_name(roll_main());
 		cout << endl;
 
 		output_debug_msg();
@@ -69,7 +108,7 @@ public:
 		for(auto i = 0; i < t;)
 		{
 			nCount++;
-			cout << roll_main().first << "\t";
+			write_name(roll_main());
 			if(!(++i % 10)) cout << endl;
 		}
 		cout << endl;
@@ -84,12 +123,12 @@ public:
 
 		while(nC)
 		{
-			static pair<string, short> ret;
+			static xx ret;
 			static int i = 0;
 
 			nCount++;
 			ret = roll_main();
-			cout << ret.first << "\t";
+			write_name(ret);
 
 			if(!(++i % 10)) cout << endl;
 			if(want == ret.first) nC--;
@@ -106,11 +145,21 @@ public:
 			<< "\t纠缠之缘：" << res.pink
 			<< "\t原石：" << res.stone
 			<< "\t氪金原石：" << res.stone_x
-			<< "\n钱：" << res.money
+			<< "\n总计抽数：" << nCount
+			<< "\t钱：" << res.money
 			<< endl;
 	}
 
 private:
+	void write_name(const xx &r)
+	{
+		if(3 == r.second) console::SetTextGreenBlue();
+		else if(4 == r.second) console::SetTextPink();
+		else if(5 == r.second) console::SetTextGolden();
+		cout << r.first << "\t";
+		console::SetTextWhite();
+	}
+
 	void buy_stone_x()
 	{
 		res.money -= 648;
@@ -167,7 +216,7 @@ private:
 		return 3;
 	}
 
-	pair<string, short> roll_main()
+	xx roll_main()
 	{
 		while(res.pink <= 0) buy_pink(1);
 		res.pink--;
@@ -183,7 +232,7 @@ private:
 				{
 					first = pool::char5up;
 
-					debugMsg << "角色：" << first << (da ? ",是" : ",不是") << "大保底,总计第" << nCount << "抽" << endl;
+					debugMsg << "角色：[" << first << (da ? "],是" : ",不是") << "大保底,总计第" << nCount << "抽" << endl;
 					da = false;
 				}
 				else
@@ -234,7 +283,8 @@ private:
 
 int main()
 {
-	Gacha gacha;
+	console::SetTextWhite();
+	Gacha *pGacha = new Gacha{};
 
 	system("cls");
 	//gacha.roll_x(200);
@@ -244,14 +294,24 @@ int main()
 	int nCode = 1145;
 	while(nCode)
 	{
-		cout << "\n\t\t/\\**** 抽 卡 模 拟 器 -- 简 约 ****/\\\n"
-			<< "输入对应数字选择功能:\n"
-			<< "\t[0]退出\n"
-			<< "\t[1]角色up单抽\n"
-			<< "\t[2]角色up十连\n"
-			<< "\t[3]角色up抽n次\n"
-			<< "\t[4]强娶模式"
-			<< endl;
+		console::SetTextPink();
+		cout << "\t\t/\\** ** ** ** 抽 卡 模 拟 器 ** ** ** **/\\\n";
+		cout << "输入对应数字选择功能:" << endl;
+		console::SetTextRed();
+		cout << "\t[0]退出" << endl;
+		console::SetTextGreen();
+		cout << "\t[1]角色up单抽" << endl;
+		console::SetTextBlue();
+		cout << "\t[2]角色up十连" << endl;
+		console::SetTextRed();
+		cout << "\t[3]角色up抽n次" << endl;
+		console::SetTextGreen();
+		cout << "\t[4]强娶模式" << endl;
+		console::SetTextBlue();
+		cout << "\t[5]复位" << endl;
+		console::SetTextPink();
+		cout << "/\\* * * * * * * * * * * * * * * * * * * * * * * * * * */\\\n";
+		console::SetTextWhite();
 
 		cin >> nCode;
 		switch(nCode)
@@ -259,48 +319,58 @@ int main()
 			case 0:
 				break;
 			case 1:
-				gacha.roll_once_x();
+				pGacha->roll_once_x();
 				break;
 			case 2:
-				gacha.roll_ten_x();
+				pGacha->roll_ten_x();
 				break;
 			case 3:
 			{
 				int n = 0;
 				cout << "抽卡次数：";
 				cin >> n;
-				gacha.roll_x(n);
+				pGacha->roll_x(n);
 			}
 			break;
 			case 4:
+				[pGacha] {
+					string name = ""; int nCo = 0;
+					cout << "心仪角色的名字：";
+					cin >> name;
+					cout << "想抽几命：";
+					cin >> nCo;
+
+					while(++nCo < 0)
+					{
+						cout << "???再说一遍几命?" << endl;
+						cin >> nCo;
+					}
+
+					if(pool::char5up == name)
+					{
+						pGacha->roll_x(name, nCo);
+						return;
+					}
+
+					for(const auto e : pool::char5)
+					{
+						if(e == name)
+						{
+							pGacha->roll_x(e, nCo);
+							return;
+						}
+					}
+
+					cout << "所选角色目前无法获取" << endl;
+				}();
+				break;
+			case 5:
 			{
-				string name = ""; int nCo = 0;
-				cout << "心仪角色的名字：";
-				cin >> name;
-				cout << "想抽几命：";
-				cin >> nCo;
-
-				if(++nCo < 0)
-				{
-					cout << "???" << endl;
-					break;
-				}
-
-				if(pool::char5up == name)
-				{
-					gacha.roll_x(name, nCo);
-					break;
-				}
-
-				for(const auto e : pool::char5)
-				{
-					if(e == name) gacha.roll_x(e, nCo);
-					break;
-				}
-
-				cout << "所选角色目前无法获取" << endl;
+				delete pGacha;
+				pGacha = new Gacha{ };
+				system("cls");
+				pGacha->get_res();
 			}
-			break;
 		}
 		continue;
 	}
